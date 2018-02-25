@@ -12,6 +12,7 @@ host_bucket: "%(bucket)s.sos-ch-dk-2.exo.io"
 use_https: True
 signature_v2: True
 bucket: "bucket-name"
+pattern: "*.zip"
 folders:
   - "backup"
   - "nextcloudbackup"
@@ -25,20 +26,16 @@ Metrics will be available at http://localhost:9327
 ```sh
 # HELP s3_latest_file_timestamp Last modified timestamp(milliseconds) for latest file in folder
 # TYPE s3_latest_file_timestamp gauge
-s3_latest_file_timestamp{folder="backup"} 1519354873092.0
-s3_latest_file_timestamp{folder="nextcloudbackup"} 1519340403144.0
+s3_latest_file_timestamp{file="backup/backup_2018-02-25.zip",folder="backup"} 1519524066157.0
 # HELP s3_oldest_file_timestamp Last modified timestamp(milliseconds) for oldest file in folder
 # TYPE s3_oldest_file_timestamp gauge
-s3_oldest_file_timestamp{folder="backup"} 1518836477369.0
-s3_oldest_file_timestamp{folder="nextcloudbackup"} 1518822003682.0
+s3_oldest_file_timestamp{file="backup/backup_2018-02-19.zip",folder="backup"} 1519005663854.0
 # HELP s3_latest_file_size Size in bytes for latest file in folder
 # TYPE s3_latest_file_size gauge
-s3_latest_file_size{folder="backup"} 322853840.0
-s3_latest_file_size{folder="nextcloudbackup"} 531322.0
+s3_latest_file_size{file="backup/backup_2018-02-25.zip",folder="backup"} 290355072.0
 # HELP s3_oldest_file_size Size in bytes for latest file in folder
 # TYPE s3_oldest_file_size gauge
-s3_oldest_file_size{folder="backup"} 322849319.0
-s3_oldest_file_size{folder="nextcloudbackup"} 528679.0
+s3_oldest_file_size{file="backup/backup_2018-02-19.zip",folder="backup"} 281699347.0
 ```
 
 ## Alert Example
@@ -46,11 +43,32 @@ s3_oldest_file_size{folder="nextcloudbackup"} 528679.0
 * Alert for tim eof latest backup. This example checks if backup is created every day
 
 ```
+groups:
+- name: host.rules
+  rules:
+  - alert: backup_is_too_old
+    expr: (time()) - s3_latest_file_timestamp / 1000 > 108000
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      description: Backup too old. Reported by instance {{ $labels.instance }}.
+      summary: Backup too old
+
+
 ```
 
 * Alert for size of latest backup. This example checks latest backup file created has minimum size of 1MB
 
 ```
+  - alert: backup_size_is_too_small
+    expr: s3_latest_file_size < 1000000
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      description: Backup size too small. Reported by instance {{ $labels.instance }}.
+      summary: Backup size too small
 ```
 
 ## Run

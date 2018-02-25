@@ -19,6 +19,7 @@
 #
 #    Created by renzo on 23.02.18.
 #
+import fnmatch
 import time
 from dateutil import parser as dtparser
 from prometheus_client import start_http_server
@@ -58,48 +59,67 @@ class S3Collector(object):
         self._s3config.update_option('use_https', use_https)
         signature = config.get('signature_v2', True)
         self._s3config.update_option('signature_v2', signature)
-        self._s3config.update_option('verbosity', logging.DEBUG)
         self._s3 = S3(self._s3config)
         
     def collect(self):
+        pattern = self._config.get('pattern', False)
+            
         latest_file_timestamp_gauge = GaugeMetricFamily(
                 's3_latest_file_timestamp',
                 'Last modified timestamp(milliseconds) for latest file in '
                 'folder',
-                labels=['folder'],
+                labels=['folder', 'file'],
         )
         oldest_file_timestamp_gauge = GaugeMetricFamily(
                 's3_oldest_file_timestamp',
                 'Last modified timestamp(milliseconds) for oldest file in '
                 'folder',
-                labels=['folder'],
+                labels=['folder', 'file'],
         )
         latest_file_size_gauge = GaugeMetricFamily(
                 's3_latest_file_size',
                 'Size in bytes for latest file in folder',
-                labels=['folder'],
+                labels=['folder', 'file'],
         )
         oldest_file_size_gauge = GaugeMetricFamily(
                 's3_oldest_file_size',
                 'Size in bytes for latest file in folder',
-                labels=['folder'],
+                labels=['folder', 'file'],
         )
 
         for folder in config.get('folders'):
             prefix = folder[-1] == '/' and folder or '{0}/'.format(folder)
             result = self._s3.bucket_list(config.get('bucket'), prefix)
             files = result['list']
+            if pattern:
+                files = [f for f in files if fnmatch.fnmatch(f['Key'], pattern)]
             files = sorted(files, key=lambda s: s['LastModified'])
+            if not files:
+                continue
             last_file = files[-1]
+            last_file_name = last_file['Key']
             oldest_file = files[0]
+            oldest_file_name = oldest_file['Key']
     
             latest_modified = string_to_timestamp(last_file['LastModified'])
             oldest_modified = string_to_timestamp(oldest_file['LastModified'])
     
-            latest_file_timestamp_gauge.add_metric([folder], latest_modified)
-            oldest_file_timestamp_gauge.add_metric([folder], oldest_modified)
-            latest_file_size_gauge.add_metric([folder], int(last_file['Size']))
-            oldest_file_size_gauge.add_metric([folder], int(oldest_file['Size']))
+            latest_file_timestamp_gauge.add_metric([
+                folder,
+                last_file_name,
+            ], latest_modified)
+            oldest_file_timestamp_gauge.add_metric([
+                folder,
+                oldest_file_name,
+            ], oldest_modified)
+            latest_file_size_gauge.add_metric([
+                folder,
+                last_file_name,
+            ], int(last_file['Size']))
+            oldest_file_size_gauge.add_metric([
+                folder,
+                oldest_file_name,
+            ], int(oldest_file['Size']))
             
         yield latest_file_timestamp_gauge
         yield oldest_file_timestamp_gauge

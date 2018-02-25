@@ -5,6 +5,7 @@ host_bucket: "%(bucket)s.sos-ch-dk-2.exo.io"
 use_https: True
 signature_v2: True
 bucket: "bucket-name"
+pattern: "*.zip"
 folders:
   - "backup"
   - "nextcloudbackup"
