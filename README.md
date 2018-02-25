@@ -40,7 +40,7 @@ s3_oldest_file_size{file="backup/backup_2018-02-19.zip",folder="backup"} 2816993
 
 ## Alert Example
 
-* Alert for tim eof latest backup. This example checks if backup is created every day
+* Alert for time of latest backup. This example checks if backup is created every day (< 30h)
 
 ```
 groups:
@@ -101,3 +101,5 @@ services:
       - 9327:9327
     network_mode: host
 ```
+
+Put the config file into ./config folder
