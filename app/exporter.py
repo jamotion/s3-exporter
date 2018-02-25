@@ -86,7 +86,11 @@ class S3Collector(object):
                 'Size in bytes for latest file in folder',
                 labels=['folder', 'file'],
         )
-
+        file_count_gauge = GaugeMetricFamily(
+                's3_file_count',
+                'Numbeer of existing files in folder',
+                labels=['folder'],
+        )
         for folder in config.get('folders'):
             prefix = folder[-1] == '/' and folder or '{0}/'.format(folder)
             result = self._s3.bucket_list(config.get('bucket'), prefix)
@@ -103,7 +107,9 @@ class S3Collector(object):
     
             latest_modified = string_to_timestamp(last_file['LastModified'])
             oldest_modified = string_to_timestamp(oldest_file['LastModified'])
-    
+
+            file_count_gauge.add_metric([folder], len(files))
+            
             latest_file_timestamp_gauge.add_metric([
                 folder,
                 last_file_name,
@@ -125,6 +131,7 @@ class S3Collector(object):
         yield oldest_file_timestamp_gauge
         yield latest_file_size_gauge
         yield oldest_file_size_gauge
+        yield file_count_gauge
 
 
 if __name__ == "__main__":

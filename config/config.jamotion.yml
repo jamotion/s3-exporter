@@ -1,0 +1,10 @@
+access_key: "EXO7d727e20771e8102c7800d9a"
+secret_key: "JJ2UzdB9n60ShtpXYs7uDT4b6HUIGb-Wb3woFg1qGY0"
+host_base: "sos-ch-dk-2.exo.io"
+host_bucket: "%(bucket)s.sos-ch-dk-2.exo.io"
+use_https: True
+signature_v2: True
+bucket: "tsf"
+pattern: "*.zip"
+folders:
+  - "backup"

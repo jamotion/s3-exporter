@@ -36,6 +36,9 @@ s3_latest_file_size{file="backup/backup_2018-02-25.zip",folder="backup"} 2903550
 # HELP s3_oldest_file_size Size in bytes for latest file in folder
 # TYPE s3_oldest_file_size gauge
 s3_oldest_file_size{file="backup/backup_2018-02-19.zip",folder="backup"} 281699347.0
+# HELP s3_file_count Numbeer of existing files in folder
+# TYPE s3_file_count gauge
+s3_file_count{folder="backup"} 7.0
 ```
 
 ## Alert Example
