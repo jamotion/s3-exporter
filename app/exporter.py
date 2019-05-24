@@ -93,7 +93,7 @@ class S3Collector(object):
         )
         for folder in config.get('folders'):
             prefix = folder[-1] == '/' and folder or '{0}/'.format(folder)
-            if prefix is '/':
+            if prefix == '/':
                 result = self._s3.bucket_list(config.get('bucket'), None)
             else:
                 result = self._s3.bucket_list(config.get('bucket'), prefix)
