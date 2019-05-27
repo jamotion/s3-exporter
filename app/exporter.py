@@ -60,10 +60,10 @@ class S3Collector(object):
         signature = config.get('signature_v2', True)
         self._s3config.update_option('signature_v2', signature)
         self._s3 = S3(self._s3config)
-        
+
     def collect(self):
         pattern = self._config.get('pattern', False)
-            
+
         latest_file_timestamp_gauge = GaugeMetricFamily(
                 's3_latest_file_timestamp',
                 'Last modified timestamp(milliseconds) for latest file in '
@@ -93,7 +93,10 @@ class S3Collector(object):
         )
         for folder in config.get('folders'):
             prefix = folder[-1] == '/' and folder or '{0}/'.format(folder)
-            result = self._s3.bucket_list(config.get('bucket'), prefix)
+            if prefix == '/':
+                result = self._s3.bucket_list(config.get('bucket'), None)
+            else:
+                result = self._s3.bucket_list(config.get('bucket'), prefix)
             files = result['list']
             if pattern:
                 files = [f for f in files if fnmatch.fnmatch(f['Key'], pattern)]
@@ -104,12 +107,11 @@ class S3Collector(object):
             last_file_name = last_file['Key']
             oldest_file = files[0]
             oldest_file_name = oldest_file['Key']
-    
             latest_modified = string_to_timestamp(last_file['LastModified'])
             oldest_modified = string_to_timestamp(oldest_file['LastModified'])
 
             file_count_gauge.add_metric([folder], len(files))
-            
+
             latest_file_timestamp_gauge.add_metric([
                 folder,
                 last_file_name,
@@ -126,7 +128,7 @@ class S3Collector(object):
                 folder,
                 oldest_file_name,
             ], int(oldest_file['Size']))
-            
+
         yield latest_file_timestamp_gauge
         yield oldest_file_timestamp_gauge
         yield latest_file_size_gauge
