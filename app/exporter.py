@@ -92,7 +92,7 @@ class S3Collector(object):
         )
         file_count_gauge = GaugeMetricFamily(
                 's3_file_count',
-                'Numbeer of existing files in folder',
+                'Number of existing files in folder',
                 labels=['folder'],
         )
         for folder in config.get('folders'):
