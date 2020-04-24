@@ -59,6 +59,10 @@ class S3Collector(object):
         self._s3config.update_option('use_https', use_https)
         signature = config.get('signature_v2', True)
         self._s3config.update_option('signature_v2', signature)
+
+        if len(self._s3config.access_key)==0:
+            self._s3config.role_config()
+
         self._s3 = S3(self._s3config)
 
     def collect(self):
